@@ -4,39 +4,37 @@ from crewai import Agent, Task, Crew
 from crewai_tools import MergeAgentHandlerTool
 
 tools = MergeAgentHandlerTool.from_tool_pack(
-    tool_pack_id=os.getenv("TOOL_PACK_ID"),
-    registered_user_id=os.getenv("REGISTERED_USER_ID"),
-    tool_names=["github__get_commits", "github__list_issues", "slack__post_message"]
+    tool_pack_id="",
+    registered_user_id=""
+    tool_names=["github__get_commits", "slack__post_message"]
 )
 
 stand_up_agent = Agent(
     role="GitHub Reporter",
     goal="Write honest daily standup updates",
-    backstory="""You're a helpful assistant that checks a developer's 
-    GitHub activity and writes authentic standup updates.""",
+    backstory="You're a helpful assistant that checks a developer's GitHub activity and writes authentic standup updates.",
     tools=tools,
     verbose=True
 )
 
 yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 
-task = Task(
-    description=f"""
-    Check my GitHub activity from {yesterday}:
-    1. Get all commits I made
-    2. Check issues I worked on
-    3. Write a standup: Yesterday, Today, Blockers
-    4. Post to #daily-standup in Slack
-    Keep it concise. 3-4 sentences max and be specific.
-    """,
+github_task = Task(
+    description=f"Write a standup update with commits owner 'Ujusophy' {yesterday} in the 'Standup-Updates-with-MergeAgent-Handler' repository",
     agent=stand_up_agent,
-    expected_output="Confirmation that standup was posted to Slack"
+    expected_output="Standup commit update in the format: Yesterday, Today, Blockers"
 )
 
+slack_task = Task(
+    description="Post a summary of the message to the #daily-standup channel.",
+    agent=stand_up_agent,
+    expected_output="Confirmation that the message was posted"
+)
 crew = Crew(
     agents=[stand_up_agent],
-    tasks=[task],
+    tasks=[github_task, slack_task],
+    verbose=True
 )
 
-task.crew.kickoff()
+result = crew.kickoff()
 print("Standup posted to Slack!")
