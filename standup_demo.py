@@ -1,12 +1,12 @@
-import os
 from datetime import datetime, timedelta
 from crewai import Agent, Task, Crew
 from crewai_tools import MergeAgentHandlerTool
 
 tools = MergeAgentHandlerTool.from_tool_pack(
     tool_pack_id="",
-    registered_user_id=""
-    tool_names=["github__get_commits", "slack__post_message"]
+    registered_user_id="",
+    tool_names=["github__get_commits", "slack__post_message"],
+    connect_to_mcp=True
 )
 
 stand_up_agent = Agent(
@@ -22,7 +22,7 @@ yesterday = (datetime.now() - timedelta(days=1)).strftime('%Y-%m-%d')
 github_task = Task(
     description=f"Write a standup update with commits owner 'Ujusophy' {yesterday} in the 'Standup-Updates-with-MergeAgent-Handler' repository",
     agent=stand_up_agent,
-    expected_output="Standup commit update in the format: Yesterday, Today, Blockers"
+    expected_output="Standup commit update in the format: Yesterday, Today, Blockers",
 )
 
 slack_task = Task(
